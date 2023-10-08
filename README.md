@@ -69,7 +69,7 @@ conda install torchinfo pyyaml numpy scipy matplotlib ray jupyter notebook
 
 - Until now, you have installed all the packages needed for this project. Then, you can clone this project via the following command:
 ```bash
-git clone ******
+git clone https://github.com/CUG-EMI/EFDO
 ```
 
 ## Dataset generation
