@@ -321,7 +321,7 @@ function preset1()
     zmax /= scale
     println("$ymin $ymax $zmin $zmax")
     range_yz = string(ymin, "/", ymax, "/", zmin, "/", zmax)
-    return range_yz
+    return range_yz1
 end
 
 function preset2()
@@ -336,7 +336,7 @@ function preset2()
     zmax /= scale
     println("$ymin $ymax $zmin $zmax")
     range_yz1 = string(ymin, "/", ymax, "/", zmin, "/", zmax)
-    return range_yz1
+    return range_yz2
 end
 
 range_yz1 = preset1()
