@@ -16,7 +16,7 @@ import scipy.io as scio
 from timeit import default_timer
 from MT2D_secondary import *
 
-def generate_model(alpha_l,n_sample,nza,n_freq,size_k):
+def generate_model(alpha_l, n_sample, nza, n_freq, size_k, size_o):
     '''
     genenrate random electrical model  
 
@@ -33,99 +33,103 @@ def generate_model(alpha_l,n_sample,nza,n_freq,size_k):
     size_o: number of observation stations
     size_k: kernel domain,
     '''
-    z = 100e3 
-    y = 100e3
-    # size_k = 100
-    # n_freq = 50
-    size_b = nza
-    freq = np.logspace(1,np.log10(1/200),n_freq)
-    # notice!
-    # ry = np.linspace(-y,y,size_k)
-    ry = np.linspace(-y,y,n_freq)
-    multiple_t = 4.0
-    multiple_b = 4.0
-    multiple_l = 4.0
-    multiple_r = 4.0
-    z_air = -(np.logspace(0, np.log10(multiple_t*z), nza+1))[::-1]
-    # near surface
-    # zn0 = np.concatenate(([0],np.linspace(0.1, z, size_k)))
+    z = 20e3  # maximum depth (m)  
+    y = 6500  # horizontal extent (m)  
+    size_b = nza  
+    # Frequencies from 1000 to 0.001 Hz  
+    freq = np.logspace(np.log10(1000),np.log10(1/1000),n_freq)  
+    # Observation points  
+    ry = np.linspace(-(y-350),(y-350),size_o+1)  
 
-    #################### z in depth #######################
-    # z1 = np.array([0, 2, 8, 20, 50, 120, 250, 400, 500, 700, 1000],dtype=float)
-    z1 = np.array([0, 0.1, 1, 3, 6, 10, 16, 25, 40, 60, 80, \
-                  100, 140, 190, 240, 300, 400, 500, 600, 800, 1000],dtype=float)
-    n_z1 = len(z1)
-    z2 = np.logspace(np.log10(1e3), np.log10(20e3), int((size_k-n_z1)/2))
-    n_z2 = len(z2)
-    z3 = np.logspace(np.log10(20e3),np.log10(z),size_k+3-n_z2-n_z1)
-    # z4 = np.logspace(log10(100e3),log10(410e3),5)
-    zn0 = np.concatenate((z1[:-1],z2[:-1],z3))
-    #######################################################
+    multiply_y = 20
+    multiply_z = 20
 
-    # zn0 = np.concatenate(([0],np.logspace(0.1, np.log10(z), size_k)))
-    z_b = np.logspace(np.log10(zn0[-1]),np.log10(multiple_b*zn0[-1]),size_b+1)
-    zn  = np.concatenate((z_air[:-1],zn0,z_b[1:]))
+    # Air layer thicknesses (m)  
+    airLayer = np.array([10, 30, 100, 300, 500, 1000, 5000, 30000, 50000, 100000])  
+    z_air = -airLayer[::-1]  # Convert to negative heights for air layers  
 
-    yn0 = np.linspace(-y,y,size_k+1)
-    # expand non kernel domain
-    y_l = -(np.logspace(np.log10(multiple_l*yn0[-1]),np.log10(yn0[-1]),size_b+1))
-    y_r = np.logspace(np.log10(yn0[-1]),np.log10(multiple_r*yn0[-1]),size_b+1)
-    yn  = np.concatenate((y_l[:-1],yn0,y_r[1:]))
+    # Build underground depth positions  
+    # Layer 1: increasing thickness from 5m to 40m, starting from 0  
+    zBlock1 = np.concatenate(([0], np.cumsum(np.arange(5, 41, 5))))  # Add 0 as starting point  
+    nz1 = len(zBlock1)  
+    z_current = zBlock1[-1]  
+    
+    # Layer 2: constant 50m thickness  
+    zBlock2 = z_current + np.cumsum(np.ones(10) * 50.0)  
+    nz2 = len(zBlock2)  
+    z_current = zBlock2[-1]  
+    
+    # Layer 3: constant 60m thickness  
+    zBlock3 = z_current + np.cumsum(np.ones(12) * 60.0)  
+    nz3 = len(zBlock3)  
+    z_current = zBlock3[-1]  
+    
+    # Layer 4: constant 100m thickness  
+    zBlock4 = z_current + np.cumsum(np.ones(22) * 100.0)  
+    nz4 = len(zBlock4)  
+    z_current = zBlock4[-1]  
+    
+    # Layer 5: constant 200m thickness  
+    zBlock5 = z_current + np.cumsum(np.ones(size_k+1 - nz1 - nz2 - nz3 - nz4) * 200.0)  
+    
+    # Bottom padding layer with logarithmic spacing  
+    zPad = np.logspace(np.log10(zBlock5[-1]), np.log10(z*multiply_z), size_b)  
+    
+    # Combine all depth positions  
+    zn0 = np.concatenate((zBlock1, zBlock2, zBlock3, zBlock4, zBlock5))  # Remove 0 to avoid duplication  
+    zn = np.concatenate((z_air, zn0, zPad))  # Add 0 back at the ground surface  
 
-    ############## background and air layer #####################
-    len_z = size_b+size_k+nza
-    len_y = 2*size_b+size_k
-    model = np.ones((n_sample,len_z,len_y))*(-2)# 100ohm.m for background
-    #############  parameters  ###################################
-    sig_up, sig_down = -4, 0  # sigma range from 10^[0,-5];
+    # Horizontal positions  
+    yn0 = np.linspace(-(y-100), y-100, size_k+1)  
+    # Horizontal padding with logarithmic spacing  
+    y_l = -(np.logspace(np.log10(multiply_y*y), np.log10(y), size_b+1))[:-1]  
+    y_r = np.logspace(np.log10(y), np.log10(multiply_y*y), size_b+1)[1:]  
+    yn = np.concatenate((y_l, yn0, y_r))  
 
-    # random
-    # alpha = 4.0 # smothness of model, the larger the smoother
-    mode = 'bound' # 
-    set_1 = sig_up # log10
-    set_2 = sig_down # log10
-    # size_random = size_k#+size_b*2
+    # Initialize model array  
+    len_z = size_b+size_k+nza  
+    len_y = 2*size_b+size_k  
+    model = np.ones((n_sample,len_z,len_y))*(-2)  
 
-    ################  construct model ###############################
-    for ii in range(n_sample):
-        # first layer, near surface, sedimentary:5-900 ohm.m
-        model0 = 0.0
-        model1 = 0.0
-        # alpha_l = [3.0,4.0,5.0,6.0,7.0]
-        # alpha_0 = [5.0]
-        # alpha_l = [3.0]
-        for alpha in alpha_l:
-        # 1. random conductivity for whold domain (not just kernel domain)
-            model_temp0 = gr.gaussian_random_field(alpha = alpha, size = size_k,
-                                       mode=mode, set_1=set_1, set_2=set_2)
-            # model_temp1 = gr.gaussian_random_field(alpha = alpha, size = size_k,
-            #                            mode=mode, set_1=-3, set_2=set_2) # for near surface
-            # model1 += model_temp1
-            model0 += model_temp0
-        min0 = np.min(model_temp0)
-        max0 = np.max(model_temp0)
-        # near surface
-        # model0[:int(size_k/5),:] = (model1[:int(size_k/5),:] +model0[:int(size_k/5),:])/2
-        model0 = gaussian_filter(model0, sigma=2)/len(alpha_l)
-        min1 = np.min(model0)
-        max1 = np.max(model0)
-        model0 = (model0-min1)*((max0-min0)/(max1-min1))+min0
-        model[ii,nza:-size_b,size_b:-size_b] = model0
-        model[ii,nza:-size_b,:size_b]  = model0[:,0:1]*np.ones((size_k,size_b)) # left
-        model[ii,nza:-size_b,-size_b:] = model0[:,-1:]*np.ones((size_k,size_b)) # right
-        model[ii,-size_b:,:]           = -2 #bottom
-        # bottom, interpolate from bottom to expanded bottom (100 ohm.m)
-        sig_bottom = np.concatenate((model[ii,-size_b-1:-size_b,:],(-2)*np.ones_like(model[ii,-size_b-1:-size_b,:])),0).T
-        f = interp2d(np.concatenate([zn0[-1:],[zn[int(-size_b/2)]]]),yn[1:], sig_bottom, kind='linear')
-        model[ii,-size_b:int(-size_b/2),:]           = f(zn[-size_b:int(-size_b/2)],yn[1:]).T
-        sig_0  = np.random.uniform(-3,0,1)[0]
-        model[ii,nza:nza+1,:] = sig_0 
+    # Model parameters  
+    sig_up, sig_down = -4, 0  # conductivity range: 10^[-4, 0]  
+    mode = 'bound'  
+    set_1 = sig_up  
+    set_2 = sig_down  
 
-    model[:,:nza,:] = -9
-    model = 10**model 
-    model_k = model[:,nza:-size_b,size_b:-size_b]
+    # Generate random models  
+    for ii in range(n_sample):  
+        model0 = 0.0  
+        model1 = 0.0  
 
-    return zn, yn, freq, ry, model,zn0,yn0,model_k
+        # Generate and combine multiple gaussian random fields  
+        for alpha in alpha_l:  
+            model_temp0 = gr.gaussian_random_field(alpha = alpha, size = size_k,  
+                                       mode=mode, set_1=set_1, set_2=set_2)  
+            model0 += model_temp0  
+            
+        # Normalize and scale the combined field  
+        min0 = np.min(model_temp0)  
+        max0 = np.max(model_temp0)  
+        model0 = gaussian_filter(model0, sigma=2)/len(alpha_l)  
+        min1 = np.min(model0)  
+        max1 = np.max(model0)  
+        model0 = (model0-min1)*((max0-min0)/(max1-min1))+min0  
+
+        # Assign values to different regions of the model  
+        model[ii,nza:-size_b,size_b:-size_b] = model0  # kernel domain  
+        model[ii,nza:-size_b,:size_b]  = model0[:,0:1]*np.ones((size_k,size_b))  # left padding  
+        model[ii,nza:-size_b,-size_b:] = model0[:,-1:]*np.ones((size_k,size_b))  # right padding  
+        model[ii,-size_b:,:]           = model[ii,-size_b-1:-size_b,:]*np.ones((size_b,size_k+2*size_b))  # bottom padding  
+       
+    # Set air layer conductivity  
+    model[:,:nza,:] = -9   
+    # Convert log conductivity to conductivity  
+    model = 10**model  
+    # Extract kernel domain  
+    model_k = model[:,nza:-size_b,size_b:-size_b]  
+
+    return zn, yn, freq, ry, model, zn0, yn0, model_k
 
 def save_model(model_name0,zn, yn, freq, ry, sig_log, rhoxy, phsxy,zxy,rhoyx,phsyx,zyx):
     '''
@@ -167,14 +171,13 @@ def func_remote(nza, zn, yn, freq, ry, sig,n_sample,mode="TETM",np_dtype = np.fl
 def main(n_sample,num_cpus,model_name):
     np_dtype = np.float64
     nza = 10 # number of air layer
-    n_freq = 64 # number of frequency
+    n_freq = 32 # number of frequency
     size_k = 64
-    # n_freq_coarse = n_freq # number of frequency
+    size_o = 41
     alpha_l = [3.0,4.0,5.0,6.0,7.0]
-    # alpha_l = [5.0]
 
-    zn, yn, freq, ry, sig,zn0,yn0,sig_k,\
-             = generate_model(alpha_l,n_sample,nza,n_freq,size_k)
+    zn, yn, freq, ry, sig, zn0, yn0, sig_k\
+             = generate_model(alpha_l,n_sample,nza,n_freq,size_k, size_o) 
 
     time0 = default_timer()
 

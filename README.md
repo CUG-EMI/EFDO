@@ -101,6 +101,20 @@ Pkg.add("PyCall")
 Pkg.build("PyCall")
 ```
 
+### ⚠️ Important Note on Forward Modeling
+The Python forward modeling code included in this repository (which is not our original work, for more details see [EFNO_GRF](https://github.com/zhongpenggeo/EFNO)) has some limitations and potential issues. Therefore, we recommend:
+
+1. Use only the Gaussian random field part of this code to generate the conductivity models
+2. Employ other well-established forward modeling codes to calculate the MT responses
+3. This approach ensures more reliable and accurate dataset generation
+
+This separation of model generation and forward computation allows for:
+- Better quality control of the synthetic data
+- More flexibility in choosing appropriate forward modeling algorithms
+- Increased reliability of the training dataset
+
+If you need recommendations for alternative forward modeling codes, please refer to established MT modeling software in the geophysical community.
+
 ### 📥 Pre-generated Datasets
 Don't want to generate data? No problem! Download our pre-generated datasets from [Google Drive datasets](https://drive.google.com/drive/folders/1vH-VZ3oBVP0ooxsk6kqALuIM_vQxroz9?usp=drive_link)
 
