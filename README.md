@@ -415,7 +415,7 @@ conda create -n gmt python=3.12
 conda activate gmt
 conda install -c conda-forge gmt
 # if `gmt --version` displays some error, please try the following way
-conda remove remove gdal sqlite 
+conda remove gdal sqlite 
 conda install -c conda-forge gmt gdal sqlite
 conda update gmt
 
