@@ -1,9 +1,23 @@
 # Extended Fourier DeepONet Neural Operator Network (EFDO) 🚀
 
-> If you find this work helpful for your research, please consider citing:
->
-> **Citation:**  
-> Liao, W., Peng, R., Hu, X., Zhang, Y., Zhou, W., Fu, X., & Lin, H. (2024). Fast forward modeling of magnetotelluric data in complex continuous media using an extended Fourier DeepONet architecture. *GEOPHYSICS*, 1-62. https://doi.org/10.1190/geo2023-0613.1
+If you find this work helpful for your research, please consider citing:
+
+ **Citation:**  
+
+ ```shell
+ @article{liao2025fast,
+   title={Fast forward modeling of magnetotelluric data in complex continuous media using an extended Fourier DeepONet architecture},
+   author={Liao, Weiyang and Peng, Ronghua and Hu, Xiangyun and Zhang, Yue and Zhou, Wenlong and Fu, Xiaonian and Lin, Haikun},
+   journal={Geophysics},
+   volume={90},
+   number={2},
+   pages={F11--F25},
+   year={2025},
+   publisher={Society of Exploration Geophysicists}
+ }
+ ```
+
+> W. Liao, R. Peng, X. Hu, Y. Zhang, W. Zhou, X. Fu, et al., GEOPHYSICS 2025 Vol. 90 Issue 2 Pages F11-F25, [DOI: 10.1190/geo2023-0613.1](https://library.seg.org/doi/abs/10.1190/geo2023-0613.1)
 
 ![EFDO Network Architecture](./EFDO_architecture.png)
 *The innovative architecture of our Extended Fourier DeepONet (EFDO) neural operator network, combining the power of Fourier transforms with DeepONet for superior performance in geophysical modeling.*
