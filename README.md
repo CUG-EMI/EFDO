@@ -86,7 +86,7 @@ conda activate efdo
 conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
 
 # Install other required packages
-conda install torchinfo pyyaml numpy scipy pandas matplotlib jupyter notebook
+conda install torchinfo pyyaml numpy scipy pandas matplotlib jupyter notebook h5py
 pip install ray
 ```
 
