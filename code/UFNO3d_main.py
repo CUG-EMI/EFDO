@@ -43,8 +43,18 @@ def get_batch_data(TRAIN_PATH, VAL_PATH, TEST_PATH,
         - n_out      : number of output channels  
     '''  
     print("begin to read data")
-    key_map0 = ['rhoxy','rhoyx']  # we only use rhoxy and rhoyx
-    key_map = key_map0[:n_out] # number of output channels is 2 (rhoxy, rhoyx)
+    
+    # Define key mapping based on n_out
+    # All dataset have been normalized already
+    # rhoxy and rhoxy are normalized by log10 values
+    # phsxy and phsyx are normalized by dividing 180
+    if n_out == 2:
+        key_map = ['rhoxy', 'rhoyx']
+    elif n_out == 4:
+        key_map = ['rhoxy', 'phsxy', 'rhoyx', 'phsyx']
+    else:
+        raise ValueError(f"n_out must be 2 or 4, got {n_out}")
+    
     t_read0 = default_timer()
     
     # get training data

@@ -55,6 +55,8 @@ def get_batch_data(TRAIN_PATH, VAL_PATH, TEST_PATH,
         key_map = ['rhoxy', 'phsxy', 'rhoyx', 'phsyx']
     else:
         raise ValueError(f"n_out must be 2 or 4, got {n_out}")
+    
+    t_read0 = default_timer()
  
     # get training data  
     reader = MatReader(TRAIN_PATH)  
